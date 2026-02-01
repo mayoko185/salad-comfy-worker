@@ -23,8 +23,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 WORKDIR /workspace
 COPY startup.sh /workspace/startup.sh
-COPY sync_all.sh /workspace/manual_sync_all.sh.sh
-RUN chmod +x /workspace/startup.sh /workspace/manual_sync_all.sh.sh
+COPY manual_sync_all.sh /workspace/manual_sync_all.sh
+RUN chmod +x /workspace/startup.sh /workspace/manual_sync_all.sh
 
 EXPOSE 8188
 CMD ["/workspace/startup.sh"]

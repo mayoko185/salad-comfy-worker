@@ -66,6 +66,41 @@ echo "=== rclone sanity check ==="
 rclone version
 retry 3 2 rclone lsd r2: >/dev/null
 
+# ---- Validate R2 Connection ----
+echo "=== Validating R2 Connection ==="
+validate_r2() {
+    echo "Testing R2 connectivity..."
+    
+    # Try to list the bucket root with timeout
+    if timeout 10 rclone lsf "r2:comfyui-bundle/" --max-depth 1 >/dev/null 2>&1; then
+        echo "✓ R2 connection successful"
+        return 0
+    else
+        echo "✗ R2 connection failed"
+        return 1
+    fi
+}
+
+# Retry R2 connection with backoff
+if ! retry 5 3 validate_r2; then
+    echo "FATAL: Cannot connect to R2 after multiple attempts"
+    echo "Please check:"
+    echo "  - R2_ACCESS_KEY is correct"
+    echo "  - R2_SECRET_KEY is correct"
+    echo "  - R2_ENDPOINT is correct (${R2_ENDPOINT})"
+    echo "  - Bucket 'comfyui-bundle' exists"
+    echo "  - Network connectivity"
+    
+    # Optional: Request Salad reallocate on R2 failure
+    curl -sS --fail --noproxy "*" --request POST \
+      --url "http://169.254.169.254/v1/reallocate" \
+      --header "Content-Type: application/json" \
+      --header "Metadata: true" \
+      --data "{\"reason\":\"Cannot connect to R2 storage\"}" || true
+    
+    exit 1
+fi
+
 MODELS_CFG="/workspace/models.json"
 rclone copy "r2:comfyui-bundle/config/models.json" "/workspace/" >/dev/null 2>&1 || true
 mkdir -p /workspace/bundle/models
@@ -94,6 +129,9 @@ for it in items:
     print(f"[models] {url} -> {dest}", flush=True)
     subprocess.check_call(cmd)
 PY
+fi
+else
+    echo "No models.json found; skipping model downloads"
 fi
 
 # ---- Optional exclude list (editable without rebuild) ----
@@ -144,17 +182,17 @@ echo "=== Restoring User Configs ==="
 rclone copy "r2:comfyui-bundle/config/user_data.tar.gz" "/workspace/" -v --stats 25s --stats-one-line || true
 
 mkdir -p /workspace/bundle/user_data
-if [ -f "/workspace/user_data.tar.gz" ]; then
+if [ -f "/workspace/config/user_data.tar.gz" ]; then
     echo "Extracting user configs/data"
     tar -xzf /workspace/user_data.tar.gz -C /workspace/bundle/user_data
-    rm /workspace/user_data.tar.gz
+    rm /workspace/config/user_data.tar.gz
     echo "User configs/data restored."
 else
     echo "No user backup found. Starting fresh."
 fi
 
 echo "=== Setting up ComfyUI paths ==="
-rm -rf /workspace/ComfyUI/custom_nodes /workspace/ComfyUI/models || true
+rm -rf /workspace/ComfyUI/custom_nodes /workspace/ComfyUI/models /workspace/ComfyUI/user 2>/dev/null || true
 ln -sf /workspace/bundle/models /workspace/ComfyUI/models
 ln -sf /workspace/bundle/custom_nodes /workspace/ComfyUI/custom_nodes
 ln -sf /workspace/bundle/user_data /workspace/ComfyUI/user
