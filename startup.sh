@@ -181,10 +181,10 @@ echo "=== Restoring User Configs ==="
 rclone copy "r2:comfyui-bundle/config/user_data.tar.gz" "/workspace/" -v --stats 25s --stats-one-line || true
 
 mkdir -p /workspace/bundle/user_data
-if [ -f "/workspace/config/user_data.tar.gz" ]; then
+if [ -f "/workspace/user_data.tar.gz" ]; then
     echo "Extracting user configs/data"
     tar -xzf /workspace/user_data.tar.gz -C /workspace/bundle/user_data
-    rm /workspace/config/user_data.tar.gz
+    rm /workspace/user_data.tar.gz
     echo "User configs/data restored."
 else
     echo "No user backup found. Starting fresh."
