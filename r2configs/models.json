@@ -1,11 +1,13 @@
 [
   {
-    "url": "https://huggingface.co/org/repo/resolve/main/model.safetensors",
-    "dest": "checkpoints/my_model.safetensors"
+    "url": "https://civitai.com/api/download/models/1884462",
+    "dest": "checkpoints/illustriousBlackMagic_v42CLEAN.safetensors",
+    "auth": "civitai"
   },
   {
-    "url": "https://civitai.com/api/download/models/123456",
-    "dest": "loras/some_lora.safetensors",
+    "url": "https://civitai.com/api/download/models/2619948",
+    "dest": "checkpoints/bananaSplitzXL_vee9PointOh.safetensors",
     "auth": "civitai"
   }
 ]
+

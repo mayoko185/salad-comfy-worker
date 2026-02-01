@@ -2,8 +2,8 @@
 **/NoobAI-XL-Vpred-v1.0.*
 **/novaAnimeXL_ilV125.*
 **/realvisxlV50_v50LightningBakedvae.*
-#**/bananaSplitzXL_vee8PointOh.*
-#**/illustriousBlackMagic_v42CLEA.*
+**/bananaSplitzXL_vee8PointOh.*
+**/illustriousBlackMagic_v42CLEA.*
 
 # === Skip a folder - Example: some_folder/** === #
 #loras/**

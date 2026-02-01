@@ -129,7 +129,6 @@ for it in items:
     print(f"[models] {url} -> {dest}", flush=True)
     subprocess.check_call(cmd)
 PY
-fi
 else
     echo "No models.json found; skipping model downloads"
 fi
