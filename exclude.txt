@@ -1,0 +1,19 @@
+# === Skip single files - Example: **/*.ckpt === #
+**/NoobAI-XL-Vpred-v1.0.*
+**/novaAnimeXL_ilV125.*
+**/realvisxlV50_v50LightningBakedvae.*
+#**/bananaSplitzXL_vee8PointOh.*
+#**/illustriousBlackMagic_v42CLEA.*
+
+# === Skip a folder - Example: some_folder/** === #
+#loras/**
+#loras/Illustrious/**
+#loras/Mayoko/**
+
+# === WAN Video Models === #
+**/Wan2.2-I2V-A14B-HighNoise-Q8_0.*
+**/Wan2.2-I2V-A14B-LowNoise-Q8_0.*
+**/Wan2.2-Animate-14B-Q8_0.*
+**/Wan22-I2V-A14B-HIGH-rCM6_0_lora_rank_64_bf16.*
+**/Wan22-I2V-A14B-LOW-rCM1_0_lora_rank_64_bf16.*
+**/Wan_2_2_I2V_A14B_HIGH_lightx2v_MoE_distill_lora_rank_64_bf16.*
