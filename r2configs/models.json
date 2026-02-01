@@ -1,0 +1,11 @@
+[
+  {
+    "url": "https://huggingface.co/org/repo/resolve/main/model.safetensors",
+    "dest": "checkpoints/my_model.safetensors"
+  },
+  {
+    "url": "https://civitai.com/api/download/models/123456",
+    "dest": "loras/some_lora.safetensors",
+    "auth": "civitai"
+  }
+]
