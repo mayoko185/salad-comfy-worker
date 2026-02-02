@@ -23,7 +23,7 @@ if [ -d "/workspace/ComfyUI/user" ]; then
 	cd /workspace/ComfyUI/user
 	tar -czf /workspace/user_data.tar.gz .
 	echo "[Sync] Uploading User data"
-	rclone copy "/workspace/user_data.tar.gz" "r2:comfyui-bundle/" 
+	rclone copy "/workspace/user_data.tar.gz" "r2:comfyui-bundle/config/" 
 fi
 
 echo ""

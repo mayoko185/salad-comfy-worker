@@ -232,51 +232,55 @@ else
 
 	# Upload NEW Model
 	
-	  while true; do
+	while true; do
 		sleep 300
-		rclone copy /workspace/bundle/models r2:comfyui-bundle/bundle/models --ignore-existing --transfers 8 >/dev/null 2>&1
+		if [ -f "${EXCLUDE_FILE}" ]; then
+			rclone copy /workspace/bundle/models r2:comfyui-bundle/bundle/models --ignore-existing --transfers 8 --exclude-from ${EXCLUDE_FILE} >/dev/null 2>&1
+		else
+			rclone copy /workspace/bundle/models r2:comfyui-bundle/bundle/models --ignore-existing --transfers 8 >/dev/null 2>&1
+		fi
 		echo "=== Local Models Synced to R2 ==="
-	  done &
+	done &
 
 	# Upload NEW Outputs
 	
-	  while true; do
-		sleep 30
-		rclone copy /workspace/ComfyUI/output r2:comfyui-bundle/output --ignore-existing --transfers 4 >/dev/null 2>&1
-		echo "=== Local Output Folder Synced to R2 ==="
-	  done &
+	while true; do
+	sleep 30
+	rclone copy /workspace/ComfyUI/output r2:comfyui-bundle/output --ignore-existing --transfers 4 >/dev/null 2>&1
+	echo "=== Local Output Folder Synced to R2 ==="
+	done &
 
 	# Upload User Configs
 	
-		while true; do
-			sleep 300
-			if [ -d "/workspace/ComfyUI/user" ]; then
-				cd /workspace/ComfyUI/user
-                if tar -czf /tmp/user_data.tar.gz .; then
-                    mv /tmp/user_data.tar.gz /workspace/user_data.tar.gz
-                    rclone copy "/workspace/user_data.tar.gz" "r2:comfyui-bundle/config/" --quiet
-					echo "=== User Configs Synced to R2 ==="
-                fi
+	while true; do
+		sleep 300
+		if [ -d "/workspace/ComfyUI/user" ]; then
+			cd /workspace/ComfyUI/user
+			if tar -czf /tmp/user_data.tar.gz .; then
+				mv /tmp/user_data.tar.gz /workspace/user_data.tar.gz
+				rclone copy "/workspace/user_data.tar.gz" "r2:comfyui-bundle/config/" --quiet
+				echo "=== User Configs Synced to R2 ==="
 			fi
-		done &
+		fi
+	done &
 
 	# Upload Custom Nodes
 
-		while true; do
-			sleep 300
-			cd /workspace/bundle/custom_nodes
+	while true; do
+		sleep 300
+		cd /workspace/bundle/custom_nodes
 
-				for dir in */; do
-					[ -d "$dir" ] || continue
-					node_name="${dir%/}"
-				# Create tarball quietly
-				tar -czf "/tmp/${node_name}.tar.gz" "$node_name" 2>/dev/null
-				rclone copy "/tmp/${node_name}.tar.gz" r2:comfyui-bundle/custom_nodes_packed/ --transfers 8 --quiet
-				echo "=== Local Custom Nodes Synced to R2 ==="
-				
-				rm "/tmp/${node_name}.tar.gz"
-			done
-		done &
+			for dir in */; do
+				[ -d "$dir" ] || continue
+				node_name="${dir%/}"
+			# Create tarball quietly
+			tar -czf "/tmp/${node_name}.tar.gz" "$node_name" 2>/dev/null
+			rclone copy "/tmp/${node_name}.tar.gz" r2:comfyui-bundle/custom_nodes_packed/ --transfers 8 --quiet
+			echo "=== Local Custom Nodes Synced to R2 ==="
+			
+			rm "/tmp/${node_name}.tar.gz"
+		done
+	done &
 
 fi
 
