@@ -4,6 +4,7 @@
 **/realvisxlV50_v50LightningBakedvae.*
 **/bananaSplitzXL_vee8PointOh.*
 **/illustriousBlackMagic_v42CLEA.*
+**/diffusion_pytorch_model.safetensors
 
 # === Skip a folder - Example: some_folder/** === #
 #loras/**
@@ -17,3 +18,31 @@
 **/Wan22-I2V-A14B-HIGH-rCM6_0_lora_rank_64_bf16.*
 **/Wan22-I2V-A14B-LOW-rCM1_0_lora_rank_64_bf16.*
 **/Wan_2_2_I2V_A14B_HIGH_lightx2v_MoE_distill_lora_rank_64_bf16.*
+
+# === Animatediff Video Models === #
+**/hsxl_temporal_layers.f16.*
+**/hsxl_temporal_layers.*
+
+# === Skip single files - Downloaded from HF or Civai === #
+**/illustriousBlackMagic_v42CLEAN.safetensors
+**/bananaSplitzXL_vee9PointOh.safetensors
+**/clip-vision_vit-h.safetensors
+**/clip-vision_vit-g.safetensors
+**/noobaiInpainting_v10.fp16.safetensors
+**/noob-sdxl-controlnet-lineart_anime.fp16.safetensors
+**/noobaiXLControlnet_openposeModel.safetensors
+**/xinsir-controlnet-union-sdxl-1.0-promax.safetensors
+**/ip-adapter_sdxl_vit-h.safetensors
+**/ipadapter/ip-adapter-faceid-plusv2_sdxl.bin
+**/noobIPAMARK1_mark1.safetensors
+**/ip-adapter-faceid-plusv2_sdxl_lora.safetensors
+**/Hyper-SDXL-8steps-CFG-lora.safetensors
+**/MAT_Places512_G_fp16.safetensors
+**/inpaint_v26.fooocus.patch
+**/
+
+**/noobaiInpainting_v10.fp16.safetensors
+
+# === Checking if these are needed for Krita I dont think so === #
+**/CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors
+**/CLIP-ViT-bigG-14-laion2B-39B-b160k.safetensors
