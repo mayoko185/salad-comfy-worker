@@ -120,11 +120,11 @@ for it in items:
     dest=os.path.join(base, dest_rel.lstrip("/"))
     os.makedirs(os.path.dirname(dest), exist_ok=True)
 
-    cmd=["curl","--fail","--location","--silent","--show-error","--output",dest,url]
-    if it.get("auth")=="civitai" and civitai_token:
-        cmd=["curl","--fail","--location","--silent","--show-error",
-             "-H",f"Authorization: Bearer {civitai_token}",
-             "--output",dest,url]
+	cmd=["curl","--fail","--location","--progress-bar","--output",dest,url]
+	if it.get("auth")=="civitai" and civitai_token:
+		cmd=["curl","--fail","--location","--progress-bar",
+			"-H",f"Authorization: Bearer {civitai_token}",
+			"--output",dest,url]
 
     print(f"[models] {url} -> {dest}", flush=True)
     subprocess.check_call(cmd)

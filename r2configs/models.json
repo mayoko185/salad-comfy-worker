@@ -2,74 +2,78 @@
   {
     "url": "https://civitai.com/api/download/models/1884462",
     "dest": "checkpoints/illustriousBlackMagic_v42CLEAN.safetensors",
-    "auth": "civitai"
+    "auth": "civitai",
 	"comment": "Main checkpoint"
   },
   {
     "url": "https://civitai.com/api/download/models/2619948",
     "dest": "checkpoints/bananaSplitzXL_vee9PointOh.safetensors",
-    "auth": "civitai"
+    "auth": "civitai",
 	"comment": "Alt checkpoint"
   },
   {
+    "url": "https://huggingface.co/Acly/SD-Checkpoints/resolve/main/novaAnimeXL_ilV125.safetensors",
+    "dest": "checkpoints/novaAnimeXL_ilV125.safetensors",
+	"comment": "Needed for Krita AI"
+  },
+  {
     "url": "https://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/model.safetensors",
-    "dest": "clip_vision/clip-vision_vit-h.safetensors"
+    "dest": "clip_vision/clip-vision_vit-h.safetensors",
 	"comment": "Needed for Krita AI"
   },
   {
     "url": "https://huggingface.co/Acly/NoobAI-Inpainting/resolve/main/noobaiInpainting_v10.fp16.safetensors",
-    "dest": "controlnet/noobaiInpainting_v10.fp16.safetensors"
+    "dest": "controlnet/noobaiInpainting_v10.fp16.safetensors",
 	"comment": "Needed for Krita AI"
   },
   {
     "url": "https://huggingface.co/Eugeoter/noob-sdxl-controlnet-lineart_anime/resolve/main/diffusion_pytorch_model.fp16.safetensors",
-    "dest": "controlnet/noob-sdxl-controlnet-lineart_anime.fp16.safetensors"
+    "dest": "controlnet/noob-sdxl-controlnet-lineart_anime.fp16.safetensors",
 	"comment": "Needed for Krita AI"
   },
   {
     "url": "https://huggingface.co/Laxhar/noob_openpose/resolve/main/openpose_pre.safetensors",
-    "dest": "controlnet/noobaiXLControlnet_openposeModel.safetensors"
+    "dest": "controlnet/noobaiXLControlnet_openposeModel.safetensors",
 	"comment": "Needed for Krita AI"
   },
   {
     "url": "https://huggingface.co/xinsir/controlnet-union-sdxl-1.0/resolve/main/diffusion_pytorch_model_promax.safetensors",
-    "dest": "controlnet/xinsir-controlnet-union-sdxl-1.0-promax.safetensors"
+    "dest": "controlnet/xinsir-controlnet-union-sdxl-1.0-promax.safetensors",
 	"comment": "Needed for Krita AI"
   },
   {
     "url": "https://huggingface.co/h94/IP-Adapter/resolve/main/sdxl_models/ip-adapter_sdxl_vit-h.safetensors",
-    "dest": "ipadapter/ip-adapter_sdxl_vit-h.safetensors"
+    "dest": "ipadapter/ip-adapter_sdxl_vit-h.safetensors",
 	"comment": "Needed for Krita AI"
   },
   {
     "url": "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid-plusv2_sdxl.bin",
-    "dest": "ipadapter/ip-adapter-faceid-plusv2_sdxl.bin"
+    "dest": "ipadapter/ip-adapter-faceid-plusv2_sdxl.bin",
 	"comment": "Needed for Krita AI"
   },
   {
     "url": "https://huggingface.co/r3gm/noob-ipa/resolve/main/model_G/noobIPAMARK1_mark1.safetensors",
-    "dest": "ipadapter/noobIPAMARK1_mark1.safetensors"
+    "dest": "ipadapter/noobIPAMARK1_mark1.safetensors",
 	"comment": "Needed for Krita AI"
   },
   {
     "url": "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid-plusv2_sdxl_lora.safetensors",
-    "dest": "loras/ip-adapter-faceid-plusv2_sdxl_lora.safetensors"
+    "dest": "loras/ip-adapter-faceid-plusv2_sdxl_lora.safetensors",
 	"comment": "Needed for Krita AI"
   },
   {
     "url": "https://huggingface.co/ByteDance/Hyper-SD/resolve/main/Hyper-SDXL-8steps-CFG-lora.safetensors",
-    "dest": "loras/Hyper-SDXL-8steps-CFG-lora.safetensors"
+    "dest": "loras/Hyper-SDXL-8steps-CFG-lora.safetensors",
 	"comment": "Needed for Krita AI"
   },
   {
     "url": "https://huggingface.co/Acly/MAT/resolve/main/MAT_Places512_G_fp16.safetensors",
-    "dest": "inpaint/MAT_Places512_G_fp16.safetensors"
+    "dest": "inpaint/MAT_Places512_G_fp16.safetensors",
 	"comment": "Needed for Krita AI"
   },
   {
     "url": "https://huggingface.co/lllyasviel/fooocus_inpaint/resolve/main/inpaint_v26.fooocus.patch",
-    "dest": "inpaint/inpaint_v26.fooocus.patch"
+    "dest": "inpaint/inpaint_v26.fooocus.patch",
 	"comment": "Needed for Krita AI"
   }
 ]
-

@@ -39,10 +39,18 @@
 **/Hyper-SDXL-8steps-CFG-lora.safetensors
 **/MAT_Places512_G_fp16.safetensors
 **/inpaint_v26.fooocus.patch
-**/
+**/novaAnimeXL_ilV125.safetensors
 
 **/noobaiInpainting_v10.fp16.safetensors
 
 # === Checking if these are needed for Krita I dont think so === #
 **/CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors
 **/CLIP-ViT-bigG-14-laion2B-39B-b160k.safetensors
+
+
+# === Qwen-Image-Edit-2511 === #
+**/qwen_image_edit_2511_bf16.safetensors
+**/qwen_2.5_vl_7b_fp8_scaled.safetensors
+**/Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors
+**/qwen_image_vae.safetensors
+**/qwen-image-edit-2511-multiple-angles-lora.safetensors
