@@ -35,14 +35,63 @@ echo "Download speed: ${DL_Mbps} Mbps (min: ${MIN_DL_Mbps})"
 
 if awk -v dl="$DL_Mbps" -v min="$MIN_DL_Mbps" 'BEGIN { exit !(dl < min) }'; then
   echo "Download < ${MIN_DL_Mbps} Mbps; requesting Salad reallocate..."
-	curl -sS --fail --noproxy "*" --request POST \
-	  --url "http://169.254.169.254/v1/reallocate" \
-	  --header "Content-Type: application/json" \
-	  --header "Metadata: true" \
-	  --data "{\"reason\":\"Insufficient Download Bandwidth\"}" || true
-	  sleep 5
+    curl -sS --fail --noproxy "*" --request POST \
+      --url "http://169.254.169.254/v1/reallocate" \
+      --header "Content-Type: application/json" \
+      --header "Metadata: true" \
+      --data "{\"reason\":\"Insufficient Download Bandwidth\"}" || true
+      sleep 5
   exit 0
 fi
+
+# ---- Start Tailscale daemon in background ----
+echo "Starting Tailscale daemon..."
+tailscaled --state=mem: --tun=userspace-networking &
+TAILSCALED_PID=$!
+sleep 3
+
+# Check if tailscaled is running
+if ! kill -0 $TAILSCALED_PID 2>/dev/null; then
+    echo "==========================================" 
+    echo "❌ ERROR: Tailscale daemon failed to start"
+    echo "=========================================="
+    exit 1
+fi
+
+# Attempt to connect to Tailscale
+echo "Connecting to Tailscale network..."
+if ! tailscale up --auth-key=$TAILSCALE_AUTH_KEY --hostname comfyui-salad-worker --accept-dns=false; then
+    echo ""
+    echo "=========================================="
+    echo "❌ TAILSCALE CONNECTION FAILED"
+    echo "🔑 Check your TAILSCALE_AUTH_KEY"
+    echo "Generate new key at: https://login.tailscale.com/admin/settings/keys"
+    echo "=========================================="
+    exit 1
+fi
+
+sleep 3
+
+# Get Tailscale IP
+TAILSCALE_IP=$(tailscale ip -4)
+
+if [ -z "$TAILSCALE_IP" ]; then
+    echo "==========================================" 
+    echo "❌ ERROR: Failed to get Tailscale IP"
+    echo "=========================================="
+    exit 1
+fi
+
+echo "=========================================="
+echo "✅ TAILSCALE CONNECTED SUCCESSFULLY"
+echo "🔗 Tailscale IP: $TAILSCALE_IP"
+echo "🏷️  Hostname: comfyui-salad-worker"
+echo "🌐 ComfyUI URL: http://comfyui-salad-worker:8188"
+echo "🌐 Or use: http://$TAILSCALE_IP:8188"
+echo "=========================================="
+
+# Enable SSH
+tailscale set --ssh
 
 # ---- Required env vars (from Salad) ----
 : "${R2_ACCESS_KEY:?Missing R2_ACCESS_KEY}"
@@ -120,11 +169,11 @@ for it in items:
     dest=os.path.join(base, dest_rel.lstrip("/"))
     os.makedirs(os.path.dirname(dest), exist_ok=True)
 
-	cmd=["curl","--fail","--location","--progress-bar","--output",dest,url]
-	if it.get("auth")=="civitai" and civitai_token:
-		cmd=["curl","--fail","--location","--progress-bar",
-			"-H",f"Authorization: Bearer {civitai_token}",
-			"--output",dest,url]
+    cmd=["curl","--fail","--location","--progress-bar","--output",dest,url]
+    if it.get("auth")=="civitai" and civitai_token:
+        cmd=["curl","--fail","--location","--progress-bar",
+            "-H",f"Authorization: Bearer {civitai_token}",
+            "--output",dest,url]
 
     print(f"[models] {url} -> {dest}", flush=True)
     subprocess.check_call(cmd)
@@ -220,67 +269,67 @@ SYNC_FILE="/workspace/sync.txt"
 
 echo "=== Fetching optional sync control file ==="
 if rclone lsf "r2:comfyui-bundle/config" >/dev/null 2>&1; then
-	rclone copy "r2:comfyui-bundle/config/sync.txt" "/workspace" >/dev/null 2>&1 || true
+    rclone copy "r2:comfyui-bundle/config/sync.txt" "/workspace" >/dev/null 2>&1 || true
 fi
 
 if [ -f "${SYNC_FILE}" ] && grep -q -i "false" "${SYNC_FILE}"; then
-	echo "=== Background Sync Disabled! Will not Sync to R2 for this session ==="
-	# Skip sync loops
+    echo "=== Background Sync Disabled! Will not Sync to R2 for this session ==="
+    # Skip sync loops
 else
 
-	echo "=== Starting Background Sync to R2 Services ==="
+    echo "=== Starting Background Sync to R2 Services ==="
 
-	# Upload NEW Model
-	
-	while true; do
-		sleep 300
-		if [ -f "${EXCLUDE_FILE}" ]; then
-			rclone copy /workspace/bundle/models r2:comfyui-bundle/bundle/models --ignore-existing --transfers 8 --exclude-from ${EXCLUDE_FILE} >/dev/null 2>&1
-		else
-			rclone copy /workspace/bundle/models r2:comfyui-bundle/bundle/models --ignore-existing --transfers 8 >/dev/null 2>&1
-		fi
-		echo "=== Local Models Synced to R2 ==="
-	done &
+    # Upload NEW Model
+    
+    while true; do
+        sleep 300
+        if [ -f "${EXCLUDE_FILE}" ]; then
+            rclone copy /workspace/bundle/models r2:comfyui-bundle/bundle/models --ignore-existing --transfers 8 --exclude-from ${EXCLUDE_FILE} >/dev/null 2>&1
+        else
+            rclone copy /workspace/bundle/models r2:comfyui-bundle/bundle/models --ignore-existing --transfers 8 >/dev/null 2>&1
+        fi
+        echo "=== Local Models Synced to R2 ==="
+    done &
 
-	# Upload NEW Outputs
-	
-	while true; do
-	sleep 30
-	rclone copy /workspace/ComfyUI/output r2:comfyui-bundle/output --ignore-existing --transfers 4 >/dev/null 2>&1
-	echo "=== Local Output Folder Synced to R2 ==="
-	done &
+    # Upload NEW Outputs
+    
+    while true; do
+    sleep 30
+    rclone copy /workspace/ComfyUI/output r2:comfyui-bundle/output --ignore-existing --transfers 4 >/dev/null 2>&1
+    echo "=== Local Output Folder Synced to R2 ==="
+    done &
 
-	# Upload User Configs
-	
-	while true; do
-		sleep 300
-		if [ -d "/workspace/ComfyUI/user" ]; then
-			cd /workspace/ComfyUI/user
-			if tar -czf /tmp/user_data.tar.gz .; then
-				mv /tmp/user_data.tar.gz /workspace/user_data.tar.gz
-				rclone copy "/workspace/user_data.tar.gz" "r2:comfyui-bundle/config/" --quiet
-				echo "=== User Configs Synced to R2 ==="
-			fi
-		fi
-	done &
+    # Upload User Configs
+    
+    while true; do
+        sleep 300
+        if [ -d "/workspace/ComfyUI/user" ]; then
+            cd /workspace/ComfyUI/user
+            if tar -czf /tmp/user_data.tar.gz .; then
+                mv /tmp/user_data.tar.gz /workspace/user_data.tar.gz
+                rclone copy "/workspace/user_data.tar.gz" "r2:comfyui-bundle/config/" --quiet
+                echo "=== User Configs Synced to R2 ==="
+            fi
+        fi
+    done &
 
-	# Upload Custom Nodes
+    # Upload Custom Nodes
 
-	while true; do
-		sleep 300
-		cd /workspace/bundle/custom_nodes
+    while true; do
+        sleep 300
+        cd /workspace/bundle/custom_nodes
 
-			for dir in */; do
-				[ -d "$dir" ] || continue
-				node_name="${dir%/}"
-			# Create tarball quietly
-			tar -czf "/tmp/${node_name}.tar.gz" "$node_name" 2>/dev/null
-			rclone copy "/tmp/${node_name}.tar.gz" r2:comfyui-bundle/custom_nodes_packed/ --transfers 8 --quiet
-			echo "=== Local Custom Nodes Synced to R2 ==="
-			
-			rm "/tmp/${node_name}.tar.gz"
-		done
-	done &
+            for dir in */; do
+                [ -d "$dir" ] || continue
+                node_name="${dir%/}"
+            # Create tarball quietly
+            tar -czf "/tmp/${node_name}.tar.gz" "$node_name" 2>/dev/null
+            rclone copy "/tmp/${node_name}.tar.gz" r2:comfyui-bundle/custom_nodes_packed/ --transfers 8 --quiet
+            echo "=== Local Custom Nodes Synced to R2 ==="
+            
+            rm "/tmp/${node_name}.tar.gz"
+        done
+    done &
 
 fi
 

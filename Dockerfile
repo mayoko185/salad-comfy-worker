@@ -16,6 +16,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install Rclone
 RUN curl https://rclone.org/install.sh | bash
 
+# Install Tailscale
+RUN curl -fsSL https://tailscale.com/install.sh | sh
+
 # Install ComfyUI
 RUN git clone --depth 1 https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI
 WORKDIR /workspace/ComfyUI
