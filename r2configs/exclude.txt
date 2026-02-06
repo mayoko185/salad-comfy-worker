@@ -2,8 +2,6 @@
 **/NoobAI-XL-Vpred-v1.0.*
 **/novaAnimeXL_ilV125.*
 **/realvisxlV50_v50LightningBakedvae.*
-**/bananaSplitzXL_vee8PointOh.*
-**/illustriousBlackMagic_v42CLEA.*
 **/diffusion_pytorch_model.safetensors
 
 # === Skip a folder - Example: some_folder/** === #

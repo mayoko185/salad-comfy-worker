@@ -1,5 +1,4 @@
 FROM pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime
-#FROM pytorch/pytorch:2.9.0-cuda13.0-cudnn9-runtime
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/New_York
