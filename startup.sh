@@ -389,7 +389,6 @@ else
     echo "No models.json found; skipping model downloads"
 fi
 
-
 # ---- Optional exclude list (editable without rebuild) ----
 # Put it in R2 at: comfyui-bundle/config/exclude.txt
 EXCLUDE_FILE="/workspace/exclude.txt"
@@ -490,7 +489,6 @@ COMFY_PID=$!
 SYNC_FILE="/workspace/sync.txt"
 
 # Run background sync service
-
 echo "=== Fetching optional sync control file ==="
 if rclone lsf "r2:comfyui-bundle/config" >/dev/null 2>&1; then
     rclone copy "r2:comfyui-bundle/config/sync.txt" "/workspace" >/dev/null 2>&1 || true
@@ -504,10 +502,6 @@ else
     SYNC_PID=$!
     echo "Background sync running (PID: $SYNC_PID)"
 fi
-
-# Keep container alive by waiting for ComfyUI
-wait $COMFY_PID
-
 
 # Keep container alive by waiting for ComfyUI
 wait $COMFY_PID
