@@ -1,13 +1,13 @@
 [
   {
     "url": "https://civitai.com/api/download/models/1884462",
-    "dest": "checkpoints/illustriousBlackMagic_v42CLEAN.safetensors",
+    "dest": "checkpoints/Illustrious/anime/illustriousBlackMagic_v42CLEAN.safetensors",
     "auth": "civitai",
 	"comment": "Main checkpoint"
   },
   {
     "url": "https://civitai.com/api/download/models/2619948",
-    "dest": "checkpoints/bananaSplitzXL_vee9PointOh.safetensors",
+    "dest": "checkpoints/Illustrious/furry/bananaSplitzXL_vee9PointOh.safetensors",
     "auth": "civitai",
 	"comment": "Alt checkpoint"
   },
