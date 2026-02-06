@@ -9,7 +9,7 @@ LABEL org.opencontainers.image.description="ComfyUI worker for Salad"
 
 # Install System Dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git wget curl unzip ca-certificates libgl1 libglib2.0-0 nload nano \
+    git wget curl unzip ca-certificates libgl1 libglib2.0-0 nload nano socat \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -28,6 +28,7 @@ WORKDIR /workspace
 COPY startup.sh /workspace/startup.sh
 COPY manual_sync_all.sh /workspace/manual_sync_all.sh
 RUN chmod +x /workspace/startup.sh /workspace/manual_sync_all.sh
+RUN echo "net.ipv4.tcp_ecn = 0" >> /etc/sysctl.conf
 
 EXPOSE 8188
 CMD ["/workspace/startup.sh"]

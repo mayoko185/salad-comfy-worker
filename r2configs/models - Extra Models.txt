@@ -1,0 +1,5 @@
+  {
+    "url": "https://huggingface.co/Acly/SD-Checkpoints/resolve/main/novaAnimeXL_ilV125.safetensors",
+    "dest": "checkpoints/novaAnimeXL_ilV125.safetensors",
+	"comment": "Needed for Krita AI"
+  },
