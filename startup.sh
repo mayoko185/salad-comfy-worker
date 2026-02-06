@@ -292,15 +292,25 @@ done
 
 echo "=== Starting ComfyUI ==="
 cd /workspace/ComfyUI
+# Increase timeouts for large image uploads
+export COMFYUI_TIMEOUT=300
 # Start ComfyUI in background
 python main.py --listen :: --port 8188 &
 COMFY_PID=$!
 
-# Bridge IPv4 for Tailscale access (if socat available)
+# Optimize TCP for large transfers
+echo "Optimizing TCP settings for large image uploads..."
+sysctl -w net.core.rmem_max=16777216 2>/dev/null || true
+sysctl -w net.core.wmem_max=16777216 2>/dev/null || true
+sysctl -w net.ipv4.tcp_rmem="4096 87380 16777216" 2>/dev/null || true
+sysctl -w net.ipv4.tcp_wmem="4096 65536 16777216" 2>/dev/null || true
+sysctl -w net.ipv4.tcp_window_scaling=1 2>/dev/null || true
+
+# Bridge IPv4 for Tailscale access
 if command -v socat >/dev/null 2>&1; then
     echo "Setting up Tailscale IPv4 bridge on port 8189..."
-    socat TCP4-LISTEN:8189,fork,reuseaddr,bind=0.0.0.0,so-rcvbuf=2097152,so-sndbuf=2097152 \
-          TCP6:[::1]:8188 &
+    socat TCP4-LISTEN:8189,fork,reuseaddr,bind=0.0.0.0,so-rcvbuf=16777216,so-sndbuf=16777216,nodelay,keepalive,keepidle=600,keepintvl=60,keepcnt=10 \
+        TCP6:[::1]:8188 > /tmp/socat.log 2>&1 &
 fi
 
 echo "=========================================="

@@ -30,5 +30,11 @@ COPY background_sync.sh /workspace/background_sync.sh
 RUN chmod +x /workspace/startup.sh /workspace/manual_sync_all.sh /workspace/background_sync.sh
 RUN echo "net.ipv4.tcp_ecn = 0" >> /etc/sysctl.conf
 
+# Optimize TCP for large transfers
+RUN echo "net.core.rmem_max=16777216" >> /etc/sysctl.conf && \
+    echo "net.core.wmem_max=16777216" >> /etc/sysctl.conf && \
+    echo "net.ipv4.tcp_window_scaling=1" >> /etc/sysctl.conf
+
+
 EXPOSE 8188
 CMD ["/workspace/startup.sh"]
