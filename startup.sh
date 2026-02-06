@@ -294,6 +294,7 @@ echo "=== Starting ComfyUI ==="
 cd /workspace/ComfyUI
 # Start ComfyUI in background
 python main.py --listen :: --port 8188 &
+COMFY_PID=$!
 
 # Bridge IPv4 for Tailscale access (if socat available)
 if command -v socat >/dev/null 2>&1; then
@@ -309,7 +310,6 @@ echo "🔗 Tailscale IP: $TAILSCALE_IP"
 echo "🌐 ComfyUI URL: http://$TAILSCALE_IP:8189"
 echo "=========================================="
 
-COMFY_PID=$!
 
 SYNC_FILE="/workspace/sync.txt"
 
