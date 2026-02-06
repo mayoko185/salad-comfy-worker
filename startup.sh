@@ -1,6 +1,182 @@
 #!/bin/bash
 set -euo pipefail
 
+LOG=/workspace/sync.log
+exec > >(tee -a "$LOG") 2>&1
+
+echo "=== Background Sync Service Starting ==="
+
+# Load exclude file if exists
+EXCLUDE_FILE="/workspace/exclude.txt"
+EXCLUDE_ARG=""
+if [ -f "${EXCLUDE_FILE}" ]; then
+    EXCLUDE_ARG="--exclude-from ${EXCLUDE_FILE}"
+    echo "Using exclude file: ${EXCLUDE_FILE}"
+fi
+
+# Check if sync is disabled
+check_sync_enabled() {
+    local SYNC_FILE="/workspace/sync.txt"
+    if [ -f "${SYNC_FILE}" ] && grep -q -i "false" "${SYNC_FILE}"; then
+        return 1  # disabled
+    fi
+    return 0  # enabled
+}
+
+# Sync models
+sync_models() {
+    if check_sync_enabled; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Syncing models..."
+        rclone copy /workspace/bundle/models r2:comfyui-bundle/bundle/models \
+            --ignore-existing --transfers 8 ${EXCLUDE_ARG} &>/dev/null
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ Models synced"
+    fi
+}
+
+# Sync outputs
+sync_outputs() {
+    if check_sync_enabled; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Syncing outputs..."
+        rclone copy /workspace/ComfyUI/output r2:comfyui-bundle/output \
+            --ignore-existing --transfers 4 &>/dev/null
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ Outputs synced"
+    fi
+}
+
+# Sync user configs
+sync_user_configs() {
+    if check_sync_enabled && [ -d "/workspace/ComfyUI/user" ]; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Syncing user configs..."
+        cd /workspace/ComfyUI/user
+        if tar -czf /tmp/user_data.tar.gz . 2>/dev/null; then
+            mv /tmp/user_data.tar.gz /workspace/user_data.tar.gz
+            rclone copy "/workspace/user_data.tar.gz" "r2:comfyui-bundle/config/" --quiet
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ User configs synced"
+        fi
+    fi
+}
+
+# Sync custom nodes with change detection
+sync_custom_nodes() {
+    if check_sync_enabled; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Checking custom nodes for changes..."
+        local CHECKSUM_FILE="/workspace/.custom_nodes_checksums"
+        local changes=0
+        
+        cd /workspace/bundle/custom_nodes
+        for dir in */; do
+            [ -d "$dir" ] || continue
+            node_name="${dir%/}"
+            
+            # Calculate directory checksum (file list + mtimes, not content)
+            current_sum=$(find "$node_name" -type f -printf '%P %T@\n' 2>/dev/null | sort | md5sum | cut -d' ' -f1)
+            
+            # Check if changed
+            if ! grep -q "^${node_name}:${current_sum}$" "${CHECKSUM_FILE}" 2>/dev/null; then
+                echo "  → Packaging ${node_name} (changed)..."
+                tar -czf "/tmp/${node_name}.tar.gz" "$node_name" 2>/dev/null
+                rclone copy "/tmp/${node_name}.tar.gz" r2:comfyui-bundle/custom_nodes_packed/ \
+                    --transfers 8 --quiet
+                rm "/tmp/${node_name}.tar.gz"
+                
+                # Update checksum
+                sed -i "/^${node_name}:/d" "${CHECKSUM_FILE}" 2>/dev/null || true
+                echo "${node_name}:${current_sum}" >> "${CHECKSUM_FILE}"
+                changes=$((changes + 1))
+            fi
+        done
+        
+        if [ $changes -eq 0 ]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] No custom node changes detected"
+        else
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ ${changes} custom node(s) synced"
+        fi
+    fi
+}
+
+# Main loop
+echo "Starting sync loops (models: 5min, outputs: 30s, user: 5min, nodes: 5min)"
+
+while true; do
+    sleep 30
+    sync_outputs &
+    
+    if [ $((SECONDS % 300)) -lt 30 ]; then
+        sync_models &
+        sync_user_configs &
+        sync_custom_nodes &
+    fi
+    
+    wait
+done
+#!/bin/bash
+
+echo "=== Starting Manual Sync to R2 ==="
+
+# Load exclude file if exists
+EXCLUDE_FILE="/workspace/exclude.txt"
+EXCLUDE_ARG=""
+if [ -f "${EXCLUDE_FILE}" ]; then
+    echo "Using exclude file: ${EXCLUDE_FILE}"
+    EXCLUDE_ARG="--exclude-from ${EXCLUDE_FILE}"
+else
+    echo "No exclude file found"
+fi
+
+# Sync custom nodes
+cd /workspace/bundle/custom_nodes
+
+for dir in */; do
+    node_name="${dir%/}"
+    echo "Packaging $node_name..."
+    
+    tar -czf "/tmp/${node_name}.tar.gz" "$node_name"
+    rclone copy "/tmp/${node_name}.tar.gz" r2:comfyui-bundle/custom_nodes_packed/ --transfers 8
+    rm "/tmp/${node_name}.tar.gz"
+    
+    echo "✓ $node_name Synced to R2"
+done
+
+echo ""
+echo "✓ All custom nodes Synced to R2!"
+echo ""
+
+# Sync user configs
+if [ -d "/workspace/ComfyUI/user" ]; then
+    cd /workspace/ComfyUI/user
+    tar -czf /workspace/user_data.tar.gz .
+    echo "[Sync] Uploading User data"
+    rclone copy "/workspace/user_data.tar.gz" "r2:comfyui-bundle/config/" 
+fi
+
+echo ""
+echo "✓ All user configs/data Synced to R2"
+echo ""
+
+# Sync models (with exclude support)
+if [ -d "/workspace/bundle/models" ]; then
+    echo "Syncing models (respecting exclude list)..."
+    rclone copy /workspace/bundle/models r2:comfyui-bundle/bundle/models \
+        --ignore-existing --transfers 8 ${EXCLUDE_ARG}
+fi
+
+echo ""
+echo "✓ Local Models Synced to R2"
+echo ""
+
+# Sync outputs
+if [ -d "/workspace/ComfyUI/output" ]; then
+    rclone copy /workspace/ComfyUI/output r2:comfyui-bundle/output \
+        --ignore-existing --transfers 4 &>/dev/null
+fi
+
+echo ""
+echo "✓ Local Output Folder Synced to R2"
+echo ""
+echo "=== Manual Sync Complete ==="
+#!/bin/bash
+set -euo pipefail
+
 LOG=/workspace/startup.log
 exec > >(tee -a "$LOG") 2>&1
 echo "=== logging to $LOG ==="
@@ -155,32 +331,64 @@ rclone copy "r2:comfyui-bundle/config/models.json" "/workspace/" >/dev/null 2>&1
 mkdir -p /workspace/bundle/models
 
 if [ -f "$MODELS_CFG" ]; then
-  python - <<'PY'
-import json, os, subprocess, sys
+    python - <<'PY'
+import json, os, subprocess, sys, time
 
-cfg="/workspace/models.json"
-base="/workspace/bundle/models"
-civitai_token=os.environ.get("CIVITAI_TOKEN","").strip()
+cfg = "/workspace/models.json"
+base = "/workspace/bundle/models"
+civitai_token = os.environ.get("CIVITAI_TOKEN", "").strip()
+items = json.load(open(cfg, "r", encoding="utf-8"))
+failed = []
 
-items=json.load(open(cfg,"r",encoding="utf-8"))
 for it in items:
-    url=it["url"]
-    dest_rel=it["dest"]
-    dest=os.path.join(base, dest_rel.lstrip("/"))
+    url = it["url"]
+    dest_rel = it["dest"]
+    dest = os.path.join(base, dest_rel.lstrip("/"))
     os.makedirs(os.path.dirname(dest), exist_ok=True)
+    
+    # Skip if already exists
+    if os.path.exists(dest):
+        print(f"[models] ✓ {dest_rel} (already exists)", flush=True)
+        continue
+    
+    cmd = ["curl", "--fail", "--location", "--progress-bar", "--output", dest, url]
+    if it.get("auth") == "civitai" and civitai_token:
+        cmd = ["curl", "--fail", "--location", "--progress-bar",
+               "-H", f"Authorization: Bearer {civitai_token}",
+               "--output", dest, url]
+    
+    print(f"[models] Downloading {url} -> {dest_rel}", flush=True)
+    
+    # Retry logic: 3 attempts with exponential backoff
+    for attempt in range(1, 4):
+        try:
+            subprocess.check_call(cmd)
+            print(f"[models] ✓ {dest_rel} downloaded successfully", flush=True)
+            break
+        except subprocess.CalledProcessError as e:
+            if attempt < 3:
+                wait_time = 2 ** attempt  # 2, 4, 8 seconds
+                print(f"[models] ✗ Download failed (attempt {attempt}/3), retrying in {wait_time}s...", flush=True)
+                time.sleep(wait_time)
+            else:
+                print(f"[models] ✗ FAILED after 3 attempts: {dest_rel}", flush=True)
+                failed.append(dest_rel)
+                # Remove partial download
+                if os.path.exists(dest):
+                    os.remove(dest)
 
-    cmd=["curl","--fail","--location","--progress-bar","--output",dest,url]
-    if it.get("auth")=="civitai" and civitai_token:
-        cmd=["curl","--fail","--location","--progress-bar",
-            "-H",f"Authorization: Bearer {civitai_token}",
-            "--output",dest,url]
-
-    print(f"[models] {url} -> {dest}", flush=True)
-    subprocess.check_call(cmd)
+if failed:
+    print(f"\n⚠ WARNING: {len(failed)} model(s) failed to download:", flush=True)
+    for f in failed:
+        print(f"  - {f}", flush=True)
+    print("Container will continue, but these models will be missing.\n", flush=True)
+else:
+    print(f"\n✓ All models downloaded successfully\n", flush=True)
 PY
 else
     echo "No models.json found; skipping model downloads"
 fi
+
 
 # ---- Optional exclude list (editable without rebuild) ----
 # Put it in R2 at: comfyui-bundle/config/exclude.txt
@@ -281,6 +489,8 @@ COMFY_PID=$!
 
 SYNC_FILE="/workspace/sync.txt"
 
+# Run background sync service
+
 echo "=== Fetching optional sync control file ==="
 if rclone lsf "r2:comfyui-bundle/config" >/dev/null 2>&1; then
     rclone copy "r2:comfyui-bundle/config/sync.txt" "/workspace" >/dev/null 2>&1 || true
@@ -288,64 +498,16 @@ fi
 
 if [ -f "${SYNC_FILE}" ] && grep -q -i "false" "${SYNC_FILE}"; then
     echo "=== Background Sync Disabled! Will not Sync to R2 for this session ==="
-    # Skip sync loops
 else
-
-    echo "=== Starting Background Sync to R2 Services ==="
-
-    # Upload NEW Model
-    
-    while true; do
-        sleep 300
-        if [ -f "${EXCLUDE_FILE}" ]; then
-            rclone copy /workspace/bundle/models r2:comfyui-bundle/bundle/models --ignore-existing --transfers 8 --exclude-from ${EXCLUDE_FILE} >/dev/null 2>&1
-        else
-            rclone copy /workspace/bundle/models r2:comfyui-bundle/bundle/models --ignore-existing --transfers 8 >/dev/null 2>&1
-        fi
-        echo "=== Local Models Synced to R2 ==="
-    done &
-
-    # Upload NEW Outputs
-    
-    while true; do
-    sleep 30
-    rclone copy /workspace/ComfyUI/output r2:comfyui-bundle/output --ignore-existing --transfers 4 >/dev/null 2>&1
-    echo "=== Local Output Folder Synced to R2 ==="
-    done &
-
-    # Upload User Configs
-    
-    while true; do
-        sleep 300
-        if [ -d "/workspace/ComfyUI/user" ]; then
-            cd /workspace/ComfyUI/user
-            if tar -czf /tmp/user_data.tar.gz .; then
-                mv /tmp/user_data.tar.gz /workspace/user_data.tar.gz
-                rclone copy "/workspace/user_data.tar.gz" "r2:comfyui-bundle/config/" --quiet
-                echo "=== User Configs Synced to R2 ==="
-            fi
-        fi
-    done &
-
-    # Upload Custom Nodes
-
-    while true; do
-        sleep 300
-        cd /workspace/bundle/custom_nodes
-
-            for dir in */; do
-                [ -d "$dir" ] || continue
-                node_name="${dir%/}"
-            # Create tarball quietly
-            tar -czf "/tmp/${node_name}.tar.gz" "$node_name" 2>/dev/null
-            rclone copy "/tmp/${node_name}.tar.gz" r2:comfyui-bundle/custom_nodes_packed/ --transfers 8 --quiet
-            echo "=== Local Custom Nodes Synced to R2 ==="
-            
-            rm "/tmp/${node_name}.tar.gz"
-        done
-    done &
-
+    echo "=== Starting Background Sync Service ==="
+    /workspace/background_sync.sh &
+    SYNC_PID=$!
+    echo "Background sync running (PID: $SYNC_PID)"
 fi
+
+# Keep container alive by waiting for ComfyUI
+wait $COMFY_PID
+
 
 # Keep container alive by waiting for ComfyUI
 wait $COMFY_PID

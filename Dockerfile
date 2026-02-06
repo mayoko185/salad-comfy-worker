@@ -26,7 +26,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 WORKDIR /workspace
 COPY startup.sh /workspace/startup.sh
 COPY manual_sync_all.sh /workspace/manual_sync_all.sh
-RUN chmod +x /workspace/startup.sh /workspace/manual_sync_all.sh
+COPY background_sync.sh /workspace/background_sync.sh
+RUN chmod +x /workspace/startup.sh /workspace/manual_sync_all.sh /workspace/background_sync.sh
 RUN echo "net.ipv4.tcp_ecn = 0" >> /etc/sysctl.conf
 
 EXPOSE 8188
