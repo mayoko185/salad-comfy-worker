@@ -5,8 +5,8 @@ from urllib.parse import urlparse
 
 from aiohttp import web, ClientSession, WSMsgType
 
-REMOTE_BASE = "https://guava-chef-92xadpojy5duy5qu.salad.cloud"
-#REMOTE_BASE = "http://100.104.213.46:8188"
+#REMOTE_BASE = "https://guava-chef-92xadpojy5duy5qu.salad.cloud"
+REMOTE_BASE = "100.105.212.33:8189"
 
 LOCAL_HOST = "127.0.0.1"   # if needed, try "0.0.0.0" and use http://localhost:8188
 LOCAL_PORT = 8188

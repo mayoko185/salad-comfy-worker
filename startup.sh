@@ -60,7 +60,7 @@ fi
 
 # Attempt to connect to Tailscale
 echo "Connecting to Tailscale network..."
-if ! tailscale up --auth-key=$TAILSCALE_AUTH_KEY --hostname comfyui-salad-worker --accept-dns=false; then
+if ! tailscale up --auth-key=$TAILSCALE_AUTH_KEY --hostname comfyui-salad-worker --accept-dns=false --timeout=10m; then
     echo ""
     echo "=========================================="
     echo "❌ TAILSCALE CONNECTION FAILED"
@@ -298,7 +298,8 @@ python main.py --listen :: --port 8188 &
 # Bridge IPv4 for Tailscale access (if socat available)
 if command -v socat >/dev/null 2>&1; then
     echo "Setting up Tailscale IPv4 bridge on port 8189..."
-    socat TCP4-LISTEN:8189,fork,reuseaddr,bind=0.0.0.0 TCP6:[::1]:8188 &
+    socat TCP4-LISTEN:8189,fork,reuseaddr,bind=0.0.0.0,so-rcvbuf=2097152,so-sndbuf=2097152 \
+          TCP6:[::1]:8188 &
 fi
 
 echo "=========================================="
