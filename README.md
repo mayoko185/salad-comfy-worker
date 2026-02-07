@@ -1,4 +1,4 @@
-﻿# salad-comfy-worker
+# salad-comfy-worker
 
 Production-ready ComfyUI worker for Salad.com with Tailscale networking, Cloudflare R2 storage sync, and automatic model management.
 
@@ -35,21 +35,15 @@ Production-ready ComfyUI worker for Salad.com with Tailscale networking, Cloudfl
 
 ### 1. Build the Docker Image
 
-```bash
-docker build -t salad-comfy-worker:latest .
-```
+docker build -t salad-comfy-worker:latest . 
 
-### 2. Required Environment Variables
+### 2. Environment Variables
 
-# Cloudflare R2 Storage (Required)
+# Required
 R2_ACCESS_KEY=your_access_key
 R2_SECRET_KEY=your_secret_key
 R2_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
-
-
-# Tailscale (Required)
 TAILSCALE_AUTH_KEY=tskey-auth-xxxxxx
-
 # Optional
 CIVITAI_TOKEN=your_civitai_api_token  # For Civitai downloads
 MIN_DL_Mbps=35                         # Minimum download speed (default: 35)
